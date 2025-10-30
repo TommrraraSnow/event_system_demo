@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-
-from typing import Any, Iterable, Literal
-
+from typing import Iterable, Literal
 
 from src.event_handlers.base import EventHandler
 from src.event_handlers.decorator import get_global_registry
@@ -10,9 +8,11 @@ from src.event_router.dispatcher import EventDispatcher
 from src.event_types import EventTypes, SkillEventTypes
 from src.events import CallableCondition  # 具体的消息模型
 from src.events import (
+    BaseEventMessage,
     CallableAction,
     DynamicLeafNode,
     Event,
+    EventABC,
     EventBranchNode,
     EventContext,
     EventStateTree,
@@ -22,8 +22,6 @@ from src.events import (
     PlayerHealthChangedMessage,
     PlayerStateChangedMessage,
     SkillHitMessage,
-    BaseEventMessage,
-    EventABC,
 )
 
 
@@ -56,7 +54,7 @@ def build_state_tree(repo: InMemoryEventConfigRepository) -> EventStateTree:
     player_branch = EventBranchNode("player_flow")
 
     def always(
-        _: EventABC[BaseEventMessage], __: EventContext, *___: Any
+        event: EventABC[BaseEventMessage], context: EventContext
     ) -> Literal[True]:
         return True
 
@@ -94,10 +92,10 @@ def populate_repository(repo: InMemoryEventConfigRepository) -> None:
         LeafConfiguration(
             listen_event=SkillEventTypes.ON_HIT,
             condition=CallableCondition(
-                lambda event, ctx: (
+                lambda event, context: (
                     isinstance(event.event_message, SkillHitMessage)
                     and event.event_message.damage
-                    >= ctx.attributes.get("damage_threshold", 0)
+                    >= context.attributes.get("damage_threshold", 0)
                 )
             ),
             actions=[
@@ -111,7 +109,7 @@ def populate_repository(repo: InMemoryEventConfigRepository) -> None:
         LeafConfiguration(
             listen_event=EventTypes.PLAYER_HEALTH_CHANGED,
             condition=CallableCondition(
-                lambda event, _ctx: (
+                lambda event, context: (
                     isinstance(event.event_message, PlayerHealthChangedMessage)
                     and event.event_message.value <= 0
                 )

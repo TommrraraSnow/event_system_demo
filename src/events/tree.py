@@ -2,11 +2,30 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, Protocol, Sequence
+from typing import Callable, Iterable, Protocol, Sequence, TypeVar, cast
 
 from src.event_types import EventType
 
 from .base import BaseEventMessage, EventABC, EventContext
+
+T = TypeVar("T", bound=BaseEventMessage)
+T_contra = TypeVar("T_contra", bound=BaseEventMessage, contravariant=True)
+
+
+class EventConditionFn(Protocol):
+    """事件条件判断函数协议。"""
+
+    def __call__(
+        self, event: EventABC[BaseEventMessage], context: EventContext
+    ) -> bool: ...
+
+
+class EventActionFn(Protocol[T_contra]):
+    """事件动作处理函数协议。"""
+
+    def __call__(
+        self, event: EventABC[T_contra], context: EventContext
+    ) -> Iterable[EventABC[BaseEventMessage]]: ...
 
 
 class EventCondition(ABC):
@@ -20,7 +39,7 @@ class EventCondition(ABC):
 class CallableCondition(EventCondition):
     """包装最基本的函数判断器"""
 
-    def __init__(self, fn: Callable[[EventABC[BaseEventMessage], EventContext], bool]):
+    def __init__(self, fn: EventConditionFn):
         self._fn = fn
 
     def evaluate(
@@ -41,19 +60,20 @@ class EventAction(ABC):
 class CallableAction(EventAction):
     """包装函数触发器"""
 
-    def __init__(
-        self,
-        fn: Callable[
-            [EventABC[BaseEventMessage], EventContext],
-            Iterable[EventABC[BaseEventMessage]],
-        ],
-    ):
+    def __init__(self, fn: EventActionFn[T_contra]):
         self._fn = fn
 
     def produce(
         self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
-        return list(self._fn(event, context))
+        fn = cast(
+            Callable[
+                [EventABC[BaseEventMessage], EventContext],
+                Iterable[EventABC[BaseEventMessage]],
+            ],
+            self._fn,
+        )
+        return list(fn(event, context))
 
 
 @dataclass(frozen=True)
