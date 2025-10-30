@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Iterable, TypeVar
+from typing import Generic, Iterable, TypeVar
 
-from events.base import EventABC, EventContext
-from events.base import BaseEventMessage
+from src.events.base import BaseEventMessage, EventABC, EventContext
 
 T = TypeVar("T", bound=BaseEventMessage)
 
 
-class EventHandler(ABC):
+class EventHandler(Generic[T], ABC):
     """Base contract for user-defined event handlers."""
 
     @abstractmethod

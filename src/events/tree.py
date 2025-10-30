@@ -2,19 +2,19 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, Protocol, Sequence, TypeVar
+from typing import Callable, Iterable, Protocol, Sequence
 
-from event_types import EventType
+from src.event_types import EventType
 
 from .base import BaseEventMessage, EventABC, EventContext
-
-T = TypeVar("T", bound=BaseEventMessage)
 
 
 class EventCondition(ABC):
 
     @abstractmethod
-    def evaluate(self, event: EventABC[T], context: EventContext) -> bool: ...
+    def evaluate(
+        self, event: EventABC[BaseEventMessage], context: EventContext
+    ) -> bool: ...
 
 
 class CallableCondition(EventCondition):
@@ -23,7 +23,9 @@ class CallableCondition(EventCondition):
     def __init__(self, fn: Callable[[EventABC[BaseEventMessage], EventContext], bool]):
         self._fn = fn
 
-    def evaluate(self, event: EventABC[T], context: EventContext) -> bool:
+    def evaluate(
+        self, event: EventABC[BaseEventMessage], context: EventContext
+    ) -> bool:
         return bool(self._fn(event, context))
 
 
@@ -32,7 +34,7 @@ class EventAction(ABC):
 
     @abstractmethod
     def produce(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]: ...
 
 
@@ -49,7 +51,7 @@ class CallableAction(EventAction):
         self._fn = fn
 
     def produce(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
         return list(self._fn(event, context))
 
@@ -76,7 +78,7 @@ class EventTransition:
     condition: EventCondition
     target: "EventTreeNode"
 
-    def matches(self, event: EventABC[T], context: EventContext) -> bool:
+    def matches(self, event: EventABC[BaseEventMessage], context: EventContext) -> bool:
         return self.condition.evaluate(event, context)
 
 
@@ -87,14 +89,14 @@ class EventTreeNode(ABC):
         self.node_id = node_id
 
     def handle(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[tuple[EventABC[BaseEventMessage], EventContext]]:
         node_context = context.with_state(self.node_id)
         yield from self._handle(event, node_context)
 
     @abstractmethod
     def _handle(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[tuple[EventABC[BaseEventMessage], EventContext]]: ...
 
 
@@ -110,7 +112,7 @@ class EventBranchNode(EventTreeNode):
         self._transitions.setdefault(listen_event, []).append(transition)
 
     def _handle(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[tuple[EventABC[BaseEventMessage], EventContext]]:
         transitions = self._transitions.get(event.event_type, [])
         for transition in transitions:
@@ -131,7 +133,7 @@ class DynamicLeafNode(EventTreeNode):
         return self._config
 
     def _handle(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[BaseEventMessage], context: EventContext
     ) -> Iterable[tuple[EventABC[BaseEventMessage], EventContext]]:
         for config in self._ensure_config_loaded():
             if config.listen_event != event.event_type:
@@ -149,7 +151,7 @@ class EventStateTree:
         self._root = root
 
     def dispatch(
-        self, event: EventABC[T], context: EventContext | None = None
+        self, event: EventABC[BaseEventMessage], context: EventContext | None = None
     ) -> list[tuple[EventABC[BaseEventMessage], EventContext]]:
         ctx = context or EventContext()
         return list(self._root.handle(event, ctx))

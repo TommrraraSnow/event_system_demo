@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar, overload
 from functools import wraps
+from typing import Any, Callable, Iterable, TypeVar, cast
 
-from events.base import EventABC, EventContext
-from event_types import EventType
-from event_handlers.base import EventHandler
-from event_handlers.registry import EventHandlerRegistry
+from src.event_handlers.base import EventHandler
+from src.event_handlers.registry import EventHandlerRegistry
+from src.event_types import EventType
+from src.events.base import BaseEventMessage, EventABC, EventContext
 
-T = TypeVar('T', bound=Callable[..., Any])
+HandlerFunc = Callable[..., Iterable[EventABC[BaseEventMessage]]]
+F = TypeVar("F", bound=HandlerFunc)
+HandlerType = TypeVar("HandlerType", bound=EventHandler[Any])
 
 # 全局注册表实例
 _global_registry: EventHandlerRegistry | None = None
@@ -29,14 +31,7 @@ def get_global_registry() -> EventHandlerRegistry:
     return _global_registry
 
 
-@overload
-def event_handler(event_type: EventType) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
-
-@overload
-def event_handler(event_type: EventType) -> Callable[[T], T]: ...
-
-
-def event_handler(event_type: EventType) -> Callable[[T], T]:
+def event_handler(event_type: EventType) -> Callable[[F], F]:
     """事件处理器装饰器，用于自动注册处理器到全局注册表。
 
     Args:
@@ -51,21 +46,26 @@ def event_handler(event_type: EventType) -> Callable[[T], T]:
             print(f"Player created: {event.event_message.payload}")
             return []
     """
-    def decorator(func: T) -> T:
+
+    def decorator(func: F) -> F:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            return func(*args, **kwargs)
+        def wrapper(
+            event: EventABC[Any], context: EventContext
+        ) -> Iterable[EventABC[BaseEventMessage]]:
+            return func(event, context)
 
         # 创建处理器类
-        class FunctionEventHandler(EventHandler):
-            def __init__(self, handler_func: Callable[..., Any]):
+        class FunctionEventHandler(EventHandler[BaseEventMessage]):
+            def __init__(self, handler_func: HandlerFunc):
                 self._handler_func = handler_func
                 self._event_type = event_type
 
-            def supports(self, event: EventABC) -> bool:
+            def supports(self, event: EventABC[BaseEventMessage]) -> bool:
                 return event.event_type == self._event_type
 
-            def handle(self, event: EventABC, context: EventContext) -> list[EventABC]:
+            def handle(
+                self, event: EventABC[BaseEventMessage], context: EventContext
+            ) -> list[EventABC[BaseEventMessage]]:
                 return list(self._handler_func(event, context))
 
             def __repr__(self) -> str:
@@ -73,14 +73,14 @@ def event_handler(event_type: EventType) -> Callable[[T], T]:
 
         # 注册到全局注册表
         registry = get_global_registry()
-        handler_instance = FunctionEventHandler(func)
+        handler_instance: EventHandler[BaseEventMessage] = FunctionEventHandler(func)
         registry.register(event_type, handler_instance)
 
         # 将处理器实例附加到函数上，以便后续访问
-        setattr(wrapper, '_event_handler', handler_instance)
-        setattr(wrapper, '_event_type', event_type)
+        setattr(wrapper, "_event_handler", handler_instance)
+        setattr(wrapper, "_event_type", event_type)
 
-        return wrapper  # type: ignore
+        return cast(F, wrapper)
 
     return decorator
 
@@ -101,27 +101,28 @@ class auto_register:
                 print(f"Health changed: {event.event_message.payload}")
                 return []
     """
+
     def __init__(self, event_type: EventType):
         self.event_type = event_type
 
-    def __call__(self, cls: type[T]) -> type[T]:
+    def __call__(self, cls: type[HandlerType]) -> type[HandlerType]:
         # 确保类继承自 EventHandler
         if not issubclass(cls, EventHandler):
             raise TypeError(f"装饰的类 {cls.__name__} 必须继承自 EventHandler")
 
         # 创建实例并注册
-        handler_instance = cls()
+        handler_instance: HandlerType = cls()
         registry = get_global_registry()
         registry.register(self.event_type, handler_instance)
 
         # 在类上标记注册信息
-        setattr(cls, '_registered_event_type', self.event_type)
-        setattr(cls, '_is_auto_registered', True)
+        setattr(cls, "_registered_event_type", self.event_type)
+        setattr(cls, "_is_auto_registered", True)
 
         return cls
 
 
-def register_handler(event_type: EventType, handler: EventHandler) -> None:
+def register_handler(event_type: EventType, handler: EventHandler[Any]) -> None:
     """手动注册事件处理器到全局注册表。
 
     Args:

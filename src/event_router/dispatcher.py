@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections import deque
 from typing import Any, Deque, Generator, TypeVar
 
-from event_handlers.registry import EventHandlerRegistry
-from events.base import BaseEventMessage, EventABC, EventContext
-from events.tree import EventStateTree
+from src.event_handlers.registry import EventHandlerRegistry
+from src.events.base import BaseEventMessage, EventABC, EventContext
+from src.events.tree import EventStateTree
 
 T = TypeVar("T", bound=BaseEventMessage)
 

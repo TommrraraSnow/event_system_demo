@@ -2,18 +2,24 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from events.base import EventABC, EventContext, BaseEventMessage
-from event_handlers.base import EventHandler
-from event_types import EventTypes, SkillEventTypes
-from events import PlayerHealthChangedMessage, PlayerStateChangedMessage, SkillHitMessage
-from event_handlers.decorator import event_handler, auto_register
+from src.events.base import EventABC, EventContext, BaseEventMessage
+from src.event_handlers.base import EventHandler
+from src.event_types import EventTypes, SkillEventTypes
+from src.events import (
+    PlayerCreatedMessage,
+    PlayerHealthChangedMessage,
+    PlayerStateChangedMessage,
+    SkillHitMessage,
+    SystemTickMessage,
+)
+from src.event_handlers.decorator import event_handler, auto_register
 
 
 # 游戏统计处理器（使用类装饰器，因为需要维护状态）
 @auto_register(SkillEventTypes.ON_HIT)
 @auto_register(EventTypes.PLAYER_HEALTH_CHANGED)
 @auto_register(EventTypes.PLAYER_STATE_CHANGED)
-class GameStatsHandler(EventHandler):
+class GameStatsHandler(EventHandler[BaseEventMessage]):
     """游戏统计处理器，收集和分析游戏数据。"""
 
     def __init__(self):
@@ -44,14 +50,18 @@ class GameStatsHandler(EventHandler):
         elif isinstance(event.event_message, PlayerStateChangedMessage):
             self.state_changes += 1
 
-        print(f"[game-stats] 总伤害: {self.total_damage}, 生命值变化: {self.health_changes}, 状态变化: {self.state_changes}")
+        print(
+            f"[game-stats] 总伤害: {self.total_damage}, 生命值变化: {self.health_changes}, 状态变化: {self.state_changes}"
+        )
 
         return []
 
 
 # 使用装饰器创建各种游戏事件处理器
 @event_handler(EventTypes.PLAYER_HEALTH_CHANGED)
-def game_log_health(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def game_log_health(
+    event: EventABC[PlayerHealthChangedMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """记录玩家生命值变化到游戏日志。
 
     Args:
@@ -68,7 +78,9 @@ def game_log_health(event: EventABC[BaseEventMessage], context: EventContext) ->
 
 
 @event_handler(EventTypes.PLAYER_STATE_CHANGED)
-def game_log_state(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def game_log_state(
+    event: EventABC[PlayerStateChangedMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """记录玩家状态变化到游戏日志。
 
     Args:
@@ -85,7 +97,9 @@ def game_log_state(event: EventABC[BaseEventMessage], context: EventContext) -> 
 
 
 @event_handler(EventTypes.PLAYER_CREATED)
-def game_log_player_created(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def game_log_player_created(
+    event: EventABC[PlayerCreatedMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """记录玩家创建到游戏日志。
 
     Args:
@@ -102,7 +116,9 @@ def game_log_player_created(event: EventABC[BaseEventMessage], context: EventCon
 
 
 @event_handler(EventTypes.SYSTEM_TICK)
-def handle_system_tick(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def handle_system_tick(
+    event: EventABC[SystemTickMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """系统时钟事件处理器。
 
     Args:
@@ -119,7 +135,9 @@ def handle_system_tick(event: EventABC[BaseEventMessage], context: EventContext)
 
 
 @event_handler(EventTypes.PLAYER_CREATED)
-def handle_player_created(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def handle_player_created(
+    event: EventABC[PlayerCreatedMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """玩家创建事件处理器。
 
     Args:
@@ -135,7 +153,9 @@ def handle_player_created(event: EventABC[BaseEventMessage], context: EventConte
 
 # 性能监控处理器
 @event_handler(SkillEventTypes.ON_HIT)
-def monitor_skill_performance(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def monitor_skill_performance(
+    event: EventABC[SkillHitMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """监控技能性能的处理函数。
 
     Args:
@@ -147,15 +167,21 @@ def monitor_skill_performance(event: EventABC[BaseEventMessage], context: EventC
     """
     if isinstance(event.event_message, SkillHitMessage):
         message = event.event_message
-        efficiency = "高" if message.damage >= 100 else "中" if message.damage >= 50 else "低"
-        print(f"[skill-monitor] 技能 {message.skill_id} 效率: {efficiency} (伤害: {message.damage})")
+        efficiency = (
+            "高" if message.damage >= 100 else "中" if message.damage >= 50 else "低"
+        )
+        print(
+            f"[skill-monitor] 技能 {message.skill_id} 效率: {efficiency} (伤害: {message.damage})"
+        )
 
     return []
 
 
 # 事件流程追踪器
 @event_handler(EventTypes.DEFAULT)
-def trace_event_flow(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def trace_event_flow(
+    event: EventABC[BaseEventMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """事件流程追踪器，记录事件的完整处理过程。
 
     Args:
@@ -174,7 +200,9 @@ def trace_event_flow(event: EventABC[BaseEventMessage], context: EventContext) -
 
 # 游戏平衡分析器
 @event_handler(SkillEventTypes.ON_HIT)
-def analyze_game_balance(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def analyze_game_balance(
+    event: EventABC[SkillHitMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """游戏平衡分析器，分析技能伤害是否平衡。
 
     Args:
@@ -187,21 +215,31 @@ def analyze_game_balance(event: EventABC[BaseEventMessage], context: EventContex
     if isinstance(event.event_message, SkillHitMessage):
         message = event.event_message
         target_health = context.attributes.get("target_health", 100)
-        damage_percentage = (message.damage / target_health) * 100 if target_health > 0 else 100
+        damage_percentage = (
+            (message.damage / target_health) * 100 if target_health > 0 else 100
+        )
 
         if damage_percentage > 80:
-            print(f"[balance-analysis] 技能 {message.skill_id} 伤害过高，占目标生命值 {damage_percentage:.1f}%")
+            print(
+                f"[balance-analysis] 技能 {message.skill_id} 伤害过高，占目标生命值 {damage_percentage:.1f}%"
+            )
         elif damage_percentage < 20:
-            print(f"[balance-analysis] 技能 {message.skill_id} 伤害过低，仅占目标生命值 {damage_percentage:.1f}%")
+            print(
+                f"[balance-analysis] 技能 {message.skill_id} 伤害过低，仅占目标生命值 {damage_percentage:.1f}%"
+            )
         else:
-            print(f"[balance-analysis] 技能 {message.skill_id} 伤害适中，占目标生命值 {damage_percentage:.1f}%")
+            print(
+                f"[balance-analysis] 技能 {message.skill_id} 伤害适中，占目标生命值 {damage_percentage:.1f}%"
+            )
 
     return []
 
 
 # 调试处理器 - 输出详细的事件信息
 @event_handler(EventTypes.DEFAULT)
-def debug_event(event: EventABC[BaseEventMessage], context: EventContext) -> Iterable[EventABC[BaseEventMessage]]:
+def debug_event(
+    event: EventABC[BaseEventMessage], context: EventContext
+) -> Iterable[EventABC[BaseEventMessage]]:
     """调试事件处理器，输出所有事件的详细信息。
 
     Args:

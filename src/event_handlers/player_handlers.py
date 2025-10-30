@@ -2,23 +2,23 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from events.base import EventABC, EventContext, BaseEventMessage
-from event_handlers.base import EventHandler
-from event_types import EventTypes
-from events import PlayerHealthChangedMessage, PlayerStateChangedMessage
-from event_handlers.decorator import event_handler, auto_register
+from src.event_handlers.base import EventHandler
+from src.event_handlers.decorator import auto_register, event_handler
+from src.event_types import EventTypes
+from src.events import PlayerHealthChangedMessage, PlayerStateChangedMessage
+from src.events.base import BaseEventMessage, EventABC, EventContext
 
 
 @auto_register(EventTypes.PLAYER_HEALTH_CHANGED)
-class PlayerHealthLogger(EventHandler):
+class PlayerHealthLogger(EventHandler[PlayerHealthChangedMessage]):
     """使用装饰器自动注册的玩家生命值记录器。"""
 
-    def supports(self, event: EventABC[BaseEventMessage]) -> bool:
+    def supports(self, event: EventABC[PlayerHealthChangedMessage]) -> bool:
         """检查事件是否为玩家生命值变化事件。"""
         return event.event_type == EventTypes.PLAYER_HEALTH_CHANGED
 
     def handle(
-        self, event: EventABC[BaseEventMessage], context: EventContext
+        self, event: EventABC[PlayerHealthChangedMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
         """处理玩家生命值变化事件。"""
         if isinstance(event.event_message, PlayerHealthChangedMessage):
@@ -33,7 +33,7 @@ class PlayerHealthLogger(EventHandler):
 # 使用函数装饰器创建各种玩家处理器
 @event_handler(EventTypes.PLAYER_HEALTH_CHANGED)
 def handle_player_health(
-    event: EventABC[BaseEventMessage], context: EventContext
+    event: EventABC[PlayerHealthChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """处理玩家生命值变化事件。
 
@@ -67,7 +67,7 @@ def handle_player_health(
 
 @event_handler(EventTypes.PLAYER_HEALTH_CHANGED)
 def log_health_change(
-    event: EventABC[BaseEventMessage], context: EventContext
+    event: EventABC[PlayerHealthChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """记录生命值变化的处理函数。
 
@@ -90,7 +90,7 @@ def log_health_change(
 
 @event_handler(EventTypes.PLAYER_HEALTH_CHANGED)
 def check_health_threshold(
-    event: EventABC[BaseEventMessage], context: EventContext
+    event: EventABC[PlayerHealthChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """检查生命值阈值的处理函数。
 
@@ -130,7 +130,7 @@ def check_health_threshold(
 # 玩家状态处理器
 @event_handler(EventTypes.PLAYER_STATE_CHANGED)
 def handle_player_state(
-    event: EventABC[BaseEventMessage], context: EventContext
+    event: EventABC[PlayerStateChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """玩家状态变化处理函数。
 
@@ -153,7 +153,7 @@ def handle_player_state(
 
 @event_handler(EventTypes.PLAYER_STATE_CHANGED)
 def log_state_transition(
-    event: EventABC[BaseEventMessage], context: EventContext
+    event: EventABC[PlayerStateChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """记录状态转换的处理函数。
 

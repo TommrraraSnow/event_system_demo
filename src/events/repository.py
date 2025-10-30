@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from events.tree import EventConfigRepository, LeafConfiguration
+from .tree import EventConfigRepository, LeafConfiguration
 
 
 class InMemoryEventConfigRepository(EventConfigRepository):

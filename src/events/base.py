@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Dict
 from uuid import uuid4
+
 from pydantic import BaseModel, Field
-from event_types import EventType
+
+from src.event_types import EventType
 
 
 class BaseEventMessage(BaseModel):

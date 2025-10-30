@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import Any, Iterable, Literal, TypeVar
+from typing import Any, Iterable, Literal
 
 
 from src.event_handlers.base import EventHandler
@@ -26,19 +26,17 @@ from src.events import (
     EventABC,
 )
 
-T = TypeVar("T", bound=BaseEventMessage)
-
 
 # 注意：PlayerStateLogger 已经被装饰器版本的 PlayerStateEventHandler 替代
 # 保留这个类作为参考
-class PlayerStateLogger(EventHandler):
+class PlayerStateLogger(EventHandler[PlayerStateChangedMessage]):
     """Example handler that reacts to computed player-state changes."""
 
-    def supports(self, event: EventABC[T]) -> bool:
+    def supports(self, event: EventABC[PlayerStateChangedMessage]) -> bool:
         return event.event_type == EventTypes.PLAYER_STATE_CHANGED
 
     def handle(
-        self, event: EventABC[T], context: EventContext
+        self, event: EventABC[PlayerStateChangedMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
         message = event.event_message
         if isinstance(message, PlayerStateChangedMessage):
@@ -126,7 +124,7 @@ def populate_repository(repo: InMemoryEventConfigRepository) -> None:
 
 
 def _emit_health_change(
-    event: EventABC[T], context: EventContext
+    event: EventABC[SkillHitMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """发出生命值变化事件。"""
     if not isinstance(event.event_message, SkillHitMessage):
@@ -148,7 +146,7 @@ def _emit_health_change(
 
 
 def _flag_player_state(
-    event: EventABC[T], context: EventContext
+    event: EventABC[PlayerHealthChangedMessage], context: EventContext
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """标记玩家状态变化。"""
     if not isinstance(event.event_message, PlayerHealthChangedMessage):
