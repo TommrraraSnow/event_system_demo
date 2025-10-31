@@ -165,14 +165,13 @@ def monitor_skill_performance(
     Returns:
         空列表，不产生新事件
     """
-    if isinstance(event.event_message, SkillHitMessage):
-        message = event.event_message
-        efficiency = (
-            "高" if message.damage >= 100 else "中" if message.damage >= 50 else "低"
-        )
-        print(
-            f"[skill-monitor] 技能 {message.skill_id} 效率: {efficiency} (伤害: {message.damage})"
-        )
+    message = event.event_message
+    efficiency = (
+        "高" if message.damage >= 100 else "中" if message.damage >= 50 else "低"
+    )
+    print(
+        f"[skill-monitor] 技能 {message.skill_id} 效率: {efficiency} (伤害: {message.damage})"
+    )
 
     return []
 
@@ -212,25 +211,24 @@ def analyze_game_balance(
     Returns:
         空列表，不产生新事件
     """
-    if isinstance(event.event_message, SkillHitMessage):
-        message = event.event_message
-        target_health = context.attributes.get("target_health", 100)
-        damage_percentage = (
-            (message.damage / target_health) * 100 if target_health > 0 else 100
-        )
+    message = event.event_message
+    target_health = context.attributes.get("target_health", 100)
+    damage_percentage = (
+        (message.damage / target_health) * 100 if target_health > 0 else 100
+    )
 
-        if damage_percentage > 80:
-            print(
-                f"[balance-analysis] 技能 {message.skill_id} 伤害过高，占目标生命值 {damage_percentage:.1f}%"
-            )
-        elif damage_percentage < 20:
-            print(
-                f"[balance-analysis] 技能 {message.skill_id} 伤害过低，仅占目标生命值 {damage_percentage:.1f}%"
-            )
-        else:
-            print(
-                f"[balance-analysis] 技能 {message.skill_id} 伤害适中，占目标生命值 {damage_percentage:.1f}%"
-            )
+    if damage_percentage > 80:
+        print(
+            f"[balance-analysis] 技能 {message.skill_id} 伤害过高，占目标生命值 {damage_percentage:.1f}%"
+        )
+    elif damage_percentage < 20:
+        print(
+            f"[balance-analysis] 技能 {message.skill_id} 伤害过低，仅占目标生命值 {damage_percentage:.1f}%"
+        )
+    else:
+        print(
+            f"[balance-analysis] 技能 {message.skill_id} 伤害适中，占目标生命值 {damage_percentage:.1f}%"
+        )
 
     return []
 

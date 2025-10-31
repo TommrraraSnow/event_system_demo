@@ -23,10 +23,9 @@ def log_player_creation(
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """记录玩家创建事件的处理器。"""
     message = event.event_message
-    if isinstance(message, PlayerCreatedMessage):
-        print(
-            f"[Player Created] 玩家 {message.player_id} ({message.player_name}) 已创建，等级: {message.initial_level}"
-        )
+    print(
+        f"[Player Created] 玩家 {message.player_id} ({message.player_name}) 已创建，等级: {message.initial_level}"
+    )
     return []
 
 
@@ -36,12 +35,11 @@ def log_skill_damage(
 ) -> Iterable[EventABC[BaseEventMessage]]:
     """记录技能伤害事件的处理器。"""
     message = event.event_message
-    if isinstance(message, SkillHitMessage):
-        critical_text = " (暴击!)" if message.is_critical else ""
-        extra_text = " (额外伤害)" if message.is_extra_damage else ""
-        print(
-            f"[Skill Hit] 技能 {message.skill_id} 对玩家 {message.target_id} 造成 {message.damage} 点伤害{critical_text}{extra_text}"
-        )
+    critical_text = " (暴击!)" if message.is_critical else ""
+    extra_text = " (额外伤害)" if message.is_extra_damage else ""
+    print(
+        f"[Skill Hit] 技能 {message.skill_id} 对玩家 {message.target_id} 造成 {message.damage} 点伤害{critical_text}{extra_text}"
+    )
     return []
 
 
@@ -57,11 +55,10 @@ class PlayerStateEventHandler(EventHandler[PlayerStateChangedMessage]):
         self, event: EventABC[PlayerStateChangedMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
         message = event.event_message
-        if isinstance(message, PlayerStateChangedMessage):
-            trail_text = f" (路径: {message.trail})" if message.trail else ""
-            print(
-                f"[State Change] 玩家 {message.player_id} 状态变更为: {message.state}{trail_text}"
-            )
+        trail_text = f" (路径: {message.trail})" if message.trail else ""
+        print(
+            f"[State Change] 玩家 {message.player_id} 状态变更为: {message.state}{trail_text}"
+        )
         return []
 
 
@@ -76,11 +73,8 @@ class PlayerHealthEventHandler(EventHandler[PlayerHealthChangedMessage]):
         self, event: EventABC[PlayerHealthChangedMessage], context: EventContext
     ) -> Iterable[EventABC[BaseEventMessage]]:
         message = event.event_message
-        if isinstance(message, PlayerHealthChangedMessage):
-            source_text = (
-                f" (来源: {message.source_event})" if message.source_event else ""
-            )
-            print(
-                f"[Health Change] 玩家 {message.player_id} 生命值变更为: {message.value}{source_text}"
-            )
+        source_text = f" (来源: {message.source_event})" if message.source_event else ""
+        print(
+            f"[Health Change] 玩家 {message.player_id} 生命值变更为: {message.value}{source_text}"
+        )
         return []

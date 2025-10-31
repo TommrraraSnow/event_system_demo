@@ -22,11 +22,10 @@ def handle_skill_hit(
     Returns:
         空列表，不产生新事件
     """
-    if isinstance(event.event_message, SkillHitMessage):
-        message = event.event_message
-        print(
-            f"[skill-hit-handler] 技能命中：{message.skill_id} -> {message.target_id} (伤害: {message.damage})"
-        )
+    message = event.event_message
+    print(
+        f"[skill-hit-handler] 技能命中：{message.skill_id} -> {message.target_id} (伤害: {message.damage})"
+    )
 
     return []
 
@@ -46,16 +45,15 @@ def handle_skill_hit_detailed(
     Returns:
         空列表，不产生新事件
     """
-    if isinstance(event.event_message, SkillHitMessage):
-        message = event.event_message
-        print(
-            f"[skill-hit] 技能 {message.skill_id} 命中目标 {message.target_id}，造成 {message.damage} 点伤害"
-        )
+    message = event.event_message
+    print(
+        f"[skill-hit] 技能 {message.skill_id} 命中目标 {message.target_id}，造成 {message.damage} 点伤害"
+    )
 
-        # 可以在这里添加额外的逻辑，比如：
-        # - 检查目标是否有护甲
-        # - 计算实际伤害
-        # - 触发技能特效等
+    # 可以在这里添加额外的逻辑，比如：
+    # - 检查目标是否有护甲
+    # - 计算实际伤害
+    # - 触发技能特效等
 
     return []
 
@@ -73,11 +71,10 @@ def log_skill_damage(
     Returns:
         空列表，不产生新事件
     """
-    if isinstance(event.event_message, SkillHitMessage):
-        message = event.event_message
-        is_critical = "暴击" if message.is_critical else "普通"
-        print(
-            f"[skill-damage] {message.skill_id} 造成 {message.damage} 点伤害 ({is_critical})"
-        )
+    message = event.event_message
+    is_critical = "暴击" if message.is_critical else "普通"
+    print(
+        f"[skill-damage] {message.skill_id} 造成 {message.damage} 点伤害 ({is_critical})"
+    )
 
     return []

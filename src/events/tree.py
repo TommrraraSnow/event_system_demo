@@ -29,7 +29,6 @@ class EventActionFn(Protocol[T_contra]):
 
 
 class EventCondition(ABC):
-
     @abstractmethod
     def evaluate(
         self, event: EventABC[BaseEventMessage], context: EventContext
@@ -121,7 +120,6 @@ class EventTreeNode(ABC):
 
 
 class EventBranchNode(EventTreeNode):
-
     def __init__(self, node_id: str):
         super().__init__(node_id)
         self._transitions: dict[EventType, list[EventTransition]] = {}
@@ -141,7 +139,6 @@ class EventBranchNode(EventTreeNode):
 
 
 class DynamicLeafNode(EventTreeNode):
-
     def __init__(self, node_id: str, repository: EventConfigRepository):
         super().__init__(node_id)
         self._repository = repository
@@ -166,7 +163,6 @@ class DynamicLeafNode(EventTreeNode):
 
 
 class EventStateTree:
-
     def __init__(self, root: EventTreeNode):
         self._root = root
 

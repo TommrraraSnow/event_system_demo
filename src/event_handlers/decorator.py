@@ -106,8 +106,7 @@ class auto_register:
         self.event_type = event_type
 
     def __call__(self, cls: type[HandlerType]) -> type[HandlerType]:
-        # 确保类继承自 EventHandler
-        if not issubclass(cls, EventHandler):
+        if not issubclass(cls, EventHandler):  # type: ignore
             raise TypeError(f"装饰的类 {cls.__name__} 必须继承自 EventHandler")
 
         # 创建实例并注册
