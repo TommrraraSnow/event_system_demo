@@ -89,7 +89,7 @@ class EventABC[T: BaseEventMessage](ABC):
 
     @property
     @abstractmethod
-    def event_message(self) -> BaseEventMessage: ...
+    def event_message(self) -> T: ...
 
 
 class Event[T: BaseEventMessage](EventABC[T]):
